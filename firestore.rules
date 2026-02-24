@@ -1,0 +1,22 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && getRole() in ['admin', 'superAdmin'];
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth.uid == resource.data.userId
+                  || getRole() in ['admin','superAdmin'];
+    }
+  }
+}
